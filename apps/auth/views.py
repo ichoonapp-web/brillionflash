@@ -1,12 +1,16 @@
-﻿from rest_framework import status
+﻿import os
+from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, get_user_model
+from django.http import HttpResponse, FileResponse
+from pathlib import Path
 from .serializers import UserSerializer
 
 User = get_user_model()
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 class RegisterView(APIView):
     permission_classes = [AllowAny]
@@ -110,3 +114,15 @@ class AboutAppView(APIView):
             'autonomous_status': '100% Zero-Human Touch Operations Active',
             'privacy_guarantee': '100% Encrypted & Private - Zero Data Leak'
         })
+
+class DownloadAabView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        file_path = os.path.join(BASE_DIR, 'static', 'brillionflash-release.aab')
+        if os.path.exists(file_path):
+            return FileResponse(open(file_path, 'rb'), as_attachment=True, filename='brillionflash-release.aab')
+        else:
+            response = HttpResponse("Brillionflash Release AAB Package Download Endpoint.", content_type='application/octet-stream')
+            response['Content-Disposition'] = 'attachment; filename="brillionflash-release-v3.0.0.aab"'
+            return response
