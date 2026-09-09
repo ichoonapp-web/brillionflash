@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -75,7 +75,7 @@ class _BrillionMainDashboardState extends State<BrillionMainDashboard> {
     });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("✨ Active Preset: $_activePreset"),
+        content: Text("? Active Preset: $_activePreset"),
         backgroundColor: const Color(0xFFFF0080),
         duration: const Duration(seconds: 1),
       ),
@@ -100,7 +100,7 @@ class _BrillionMainDashboardState extends State<BrillionMainDashboard> {
           ],
         ),
         content: Text(
-          "🎉 You claimed +5 Free AI Credits for Day $_dailyStreak streak!\n\nTotal Credits: $_userCredits",
+          "?? You claimed +5 Free AI Credits for Day $_dailyStreak streak!\n\nTotal Credits: $_userCredits",
           style: const TextStyle(fontSize: 14),
         ),
         actions: [
@@ -213,7 +213,7 @@ class _BrillionMainDashboardState extends State<BrillionMainDashboard> {
               const Icon(Icons.local_fire_department, color: Color(0xFFFF3D00), size: 22),
               const SizedBox(width: 8),
               Text(
-                "Daily Streak: Day $_dailyStreak 🔥 (+5 Credits Ready)",
+                "Daily Streak: Day $_dailyStreak ?? (+5 Credits Ready)",
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
               ),
             ],
@@ -401,7 +401,7 @@ class _BrillionMainDashboardState extends State<BrillionMainDashboard> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(color: const Color(0xFF14141E), borderRadius: BorderRadius.circular(12)),
                   child: const Text(
-                    "Brillionflash 12K AI Ring Light එකෙන් හදපු අලුත්ම වීඩියෝ එක! ✨ #LitWithBrillionflashAI #Brillionflash #Viral",
+                    "Brillionflash 12K AI Ring Light ????? ???? ?????? ?????? ??! ? #LitWithBrillionflashAI #Brillionflash #Viral",
                     style: TextStyle(fontSize: 13, height: 1.4),
                   ),
                 ),
@@ -412,7 +412,7 @@ class _BrillionMainDashboardState extends State<BrillionMainDashboard> {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("🚀 Opening TikTok with Auto-Caption & Floating Light!")),
+                            const SnackBar(content: Text("?? Opening TikTok with Auto-Caption & Floating Light!")),
                           );
                         },
                         icon: const Icon(Icons.share, size: 16),
@@ -425,7 +425,7 @@ class _BrillionMainDashboardState extends State<BrillionMainDashboard> {
                       child: ElevatedButton.icon(
                         onPressed: () {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("📸 Opening Instagram Reels!")),
+                            const SnackBar(content: Text("?? Opening Instagram Reels!")),
                           );
                         },
                         icon: const Icon(Icons.camera_alt, size: 16),
@@ -561,3 +561,4 @@ class _BrillionMainDashboardState extends State<BrillionMainDashboard> {
     );
   }
 }
+
