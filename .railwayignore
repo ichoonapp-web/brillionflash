@@ -1,0 +1,11 @@
+﻿build/
+.dart_tool/
+.idea/
+.vscode/
+*.iml
+android/.gradle/
+android/app/build/
+ios/Flutter/ephemeral/
+windows/runner/Debug/
+windows/runner/Release/
+macos/Flutter/ephemeral/
