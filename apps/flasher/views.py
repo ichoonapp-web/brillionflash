@@ -1,4 +1,6 @@
 ﻿from rest_framework import generics
+from rest_framework.views import APIView
+from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import LightPreset
 from .serializers import LightPresetSerializer
@@ -22,13 +24,25 @@ class PresetListCreateView(generics.ListCreateAPIView):
     def _seed_default_presets(self):
         defaults = [
             {'name': 'K-Beauty Soft Glow', 'red': 255, 'green': 225, 'blue': 210, 'brightness': 95, 'kelvin': 5200, 'category': 'k_beauty', 'is_trending': True},
-            {'name': 'Cinematic Warm Gold', 'red': 255, 'green': 190, 'blue': 120, 'brightness': 90, 'kelvin': 3200, 'category': 'cinematic_studio', 'is_trending': True},
+            {'name': 'Golden Hour Studio', 'red': 255, 'green': 190, 'blue': 120, 'brightness': 90, 'kelvin': 3200, 'category': 'cinematic_studio', 'is_trending': True},
             {'name': 'Cyberpunk Neon Pulse', 'red': 0, 'green': 240, 'blue': 255, 'brightness': 100, 'kelvin': 8500, 'category': 'cyberpunk_neon', 'is_trending': True},
             {'name': 'Soft Natural Portrait', 'red': 250, 'green': 240, 'blue': 230, 'brightness': 85, 'kelvin': 5600, 'category': 'soft_portrait', 'is_trending': True},
             {'name': 'TikTok Streamer Ring', 'red': 255, 'green': 210, 'blue': 240, 'brightness': 98, 'kelvin': 6000, 'category': 'tiktok_streamer', 'is_trending': True},
         ]
         for p in defaults:
             LightPreset.objects.get_or_create(name=p['name'], defaults=p)
+
+class InstantOneTapGlowView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        PresetListCreateView()._seed_default_presets()
+        instant_presets = LightPreset.objects.filter(is_trending=True)[:3]
+        return Response({
+            'status': 'Instant 1-Tap Glow Active',
+            'presets': LightPresetSerializer(instant_presets, many=True).data,
+            'smart_tag': '#LitWithBrillionflashAI #Brillionflash'
+        })
 
 class PresetRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = LightPreset.objects.all()
