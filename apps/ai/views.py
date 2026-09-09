@@ -108,6 +108,61 @@ class AIBeatSyncView(APIView):
         data = patterns.get(genre, patterns['pop'])
         return Response(data)
 
+class AICreatorStudioView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        phone_model = request.data.get('phone_model', 'Budget Smartphone')
+        return Response({
+            'folder': 'Content Creator Hub',
+            'engine': '120FPS 12K Ultra AI Super-Resolution Engine',
+            'status': 'Active',
+            'enhancements': {
+                'frame_rate_boost': '120 FPS Motion Smoothing',
+                'resolution_upscale': '12K AI Super-Resolution Matrix',
+                'noise_reduction': 'AI Night Vision Noise Filter (99.2% Clarity)',
+                'color_grading': 'Cinematic K-Beauty Glow Curve',
+                'hardware_optimization': f'Optimized for {phone_model}'
+            },
+            'supported_apps': ['TikTok', 'Instagram Reels', 'YouTube Shorts', 'WhatsApp', 'Facebook']
+        })
+
+class AIAutoCaptionShareView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if user.credits <= 0:
+            return Response({"error": "No credits"}, status=400)
+
+        topic = request.data.get('topic', 'My new video created with Brillionflash Ring Light')
+        platform = request.data.get('platform', 'TikTok')
+
+        system_prompt = 'Respond ONLY with JSON: {"caption":"catchy caption in Sinhala & English","hashtags":["#tag1","#tag2"],"top_comment":"viral first comment in Sinhala","share_action":"1-Tap Auto Share Ready"}'
+        user_prompt = f"Generate a viral caption, hashtags, and top comment for {platform} video about: {topic}"
+
+        user.credits = F('credits') - 1
+        user.save()
+
+        try:
+            content = call_deepseek(system_prompt, user_prompt)
+            match = re.search(r'\{.*\}', content, re.DOTALL)
+            if match:
+                return Response(json.loads(match.group()))
+            return Response({
+                "caption": "Brillionflash 12K AI Ring Light එකෙන් හදපු අලුත්ම වීඩියෝ එක! ✨ #Brillionflash #ContentCreator #Viral",
+                "hashtags": ["#Brillionflash", "#12KAI", "#ContentCreator", "#Viral"],
+                "top_comment": "මේ වීඩියෝ එකේ පට්ට ආලෝකය තියෙන්නේ Brillionflash Floating Ring Light එකෙන්! 💡🔥",
+                "share_action": "1-Tap Auto Share Ready"
+            })
+        except Exception:
+            return Response({
+                "caption": "Brillionflash 12K AI Ring Light එකෙන් හදපු අලුත්ම වීඩියෝ එක! ✨ #Brillionflash #ContentCreator #Viral",
+                "hashtags": ["#Brillionflash", "#12KAI", "#ContentCreator", "#Viral"],
+                "top_comment": "මේ වීඩියෝ එකේ පට්ට ආලෝකය තියෙන්නේ Brillionflash Floating Ring Light එකෙන්! 💡🔥",
+                "share_action": "1-Tap Auto Share Ready"
+            })
+
 class BuyAPIKeyView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
