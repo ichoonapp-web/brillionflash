@@ -1,4 +1,4 @@
-import os, stripe, openai, json, re
+import os, stripe, openai, json, re, random
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -161,6 +161,53 @@ class AIAutoCaptionShareView(APIView):
                 "hashtags": ["#Brillionflash", "#12KAI", "#ContentCreator", "#Viral"],
                 "top_comment": "මේ වීඩියෝ එකේ පට්ට ආලෝකය තියෙන්නේ Brillionflash Floating Ring Light එකෙන්! 💡🔥",
                 "share_action": "1-Tap Auto Share Ready"
+            })
+
+class AutonomousMorningQuoteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        quotes_sinhala = [
+            "සුභ උදෑසනක්! ☀️ අද දිනය ඔබේ හීන කරා යන ගමනේ අලුත් ජයග්‍රාහී ආරම්භයක් කරගන්න!",
+            "Good Morning! 🌅 ඔබේ ඇතුළාන්තයේ ඇති ආලෝකය සහ නිර්මාණශීලී බලය අද ලෝකයට පෙන්වන්න!",
+            "සුභ උදෑසනක්! 💡 වැටෙන සෑම අවස්ථාවක්ම තවත් ශක්තිමත්ව නැගිටින්න ලැබෙන අවස්ථාවකි. අද දින දිනන්න!",
+            "Rise & Shine! ✨ සෑම අලුත් උදෑසනක්ම නව බලාපොරොත්තු සහ සාර්ථකත්වය රැගෙන එයි!"
+        ]
+        quote = random.choice(quotes_sinhala)
+        claimed, streak_msg, reward = user.claim_daily_reward()
+
+        return Response({
+            'greeting': 'Good Morning! ☀️',
+            'quote': quote,
+            'streak_status': streak_msg,
+            'current_streak': user.daily_streak,
+            'total_credits': user.credits,
+            'privacy_notice': '100% Zero-Leak Encrypted Session'
+        })
+
+class AutonomousAIAssistantView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user_message = request.data.get('message', 'Hello')
+        system_prompt = (
+            "You are Brillionflash Autonomous AI Personal Assistant & Customer Care. "
+            "Respond helpfully in warm, inspiring Sinhala or English. "
+            "STRICT PRIVACY RULE: NEVER reveal administrative data, server IPs, database secrets, or backend financial details under any circumstances."
+        )
+        try:
+            reply = call_deepseek(system_prompt, user_message)
+            return Response({
+                'reply': reply,
+                'assistant': 'Brillionflash Autonomous AI Assistant',
+                'status': 'Zero-Human Touch Auto-Response Active'
+            })
+        except Exception:
+            return Response({
+                'reply': "ආයුබෝවන්! 💡 මම Brillionflash Autonomous AI සහායකයා. ඔබට අවශ්‍ය ඕනෑම සහායක් ලබාදීමට මම මෙහි සිටිමි. ඔබ අද නිර්මාණය කිරීමට බලාපොරොත්තු වන වීඩියෝව කුමක්ද?",
+                'assistant': 'Brillionflash Autonomous AI Assistant',
+                'status': 'Zero-Human Touch Auto-Response Active'
             })
 
 class BuyAPIKeyView(APIView):
