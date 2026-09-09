@@ -1,0 +1,98 @@
+# ============================================================
+#  BRIILLIONFLASH – FINAL DEPLOYMENT SCRIPT
+# ============================================================
+
+Set-Location "C:\Users\home\Desktop\brillionflash"
+
+Write-Host "=== BRIILLIONFLASH FINAL DEPLOYMENT ===" -ForegroundColor Cyan
+
+# [1/6] marketplace/views.py නිවැරදි කරන්න
+Write-Host "[1/6] Fixing marketplace/views.py..." -ForegroundColor Yellow
+@"
+import stripe
+import os
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from .models import Item
+from .serializers import ItemSerializer
+
+stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
+
+class ItemListCreateView(generics.ListCreateAPIView):
+    queryset = Item.objects.all().order_by('-created_at')
+    serializer_class = ItemSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+    def perform_create(self, serializer):
+        serializer.save(creator=self.request.user)
+
+class ItemRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Item.objects.all()
+    serializer_class = ItemSerializer
+    permission_classes = [IsAuthenticated]
+
+@csrf_exempt
+def create_checkout_session(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        item_id = data['itemId']
+        item = Item.objects.get(id=item_id)
+        buyer = request.user
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {'name': item.title},
+                    'unit_amount': int(item.price * 100),
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url='https://yourdomain.com/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url='https://yourdomain.com/cancel',
+            metadata={'item_id': str(item.id), 'buyer_id': str(buyer.id)}
+        )
+        return JsonResponse({'url': session.url})
+"@ | Out-File -FilePath "apps\marketplace\views.py" -Encoding utf8
+Write-Host "✅ marketplace/views.py fixed!" -ForegroundColor Green
+
+# [2/6] DATABASE_URL ලබා ගැනීම (Postgres service එකෙන්)
+Write-Host "[2/6] Getting DATABASE_URL..." -ForegroundColor Yellow
+$dbUrl = (railway variables --service Postgres 2>$null | Select-String "DATABASE_URL" | Select-Object -First 1).ToString().Split("=")[1].Trim()
+if (-not $dbUrl) {
+    Write-Host "⚠️ Could not fetch automatically. Please paste manually:" -ForegroundColor Yellow
+    $dbUrl = Read-Host "Paste DATABASE_URL"
+}
+Write-Host "✅ DATABASE_URL obtained!" -ForegroundColor Green
+
+# [3/6] Web service එකට DATABASE_URL set කරන්න
+Write-Host "[3/6] Setting DATABASE_URL on web service..." -ForegroundColor Yellow
+railway variables --service web set DATABASE_URL=$dbUrl
+
+# [4/6] Git commit + push
+Write-Host "[4/6] Pushing to GitHub..." -ForegroundColor Yellow
+git add .
+git commit -m "Final fix: marketplace views + DATABASE_URL"
+git push origin main --force
+
+# [5/6] Deploy to Railway
+Write-Host "[5/6] Deploying to Railway..." -ForegroundColor Yellow
+railway up
+
+# [6/6] Migrations + Superuser
+Write-Host "[6/6] Running migrations & creating superuser..." -ForegroundColor Yellow
+Start-Sleep -Seconds 15
+railway ssh python manage.py migrate
+railway ssh python manage.py shell -c "from django.contrib.auth.models import User; User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@brillionflash.com', 'ChangeThisStrong123!')"
+
+Write-Host ""
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host "  🎉 DEPLOYMENT SUCCESSFUL! App is LIVE!" -ForegroundColor Green
+Write-Host "=============================================" -ForegroundColor Cyan
+Write-Host "  Backend URL: https://web-production-1bf52.up.railway.app" -ForegroundColor White
+Write-Host "  Admin Panel: https://web-production-1bf52.up.railway.app/admin/" -ForegroundColor White
+Write-Host "  Admin User:  admin / ChangeThisStrong123!" -ForegroundColor Yellow
+Write-Host "=============================================" -ForegroundColor Cyan
