@@ -1,0 +1,30 @@
+brillionflash/
+├── .env
+├── requirements.txt
+├── Dockerfile
+├── docker-compose.yml
+├── manage.py
+├── config/
+│   ├── __init__.py
+│   ├── settings.py          # (Updated with security)
+│   ├── urls.py
+│   ├── config_urls.py
+│   ├── asgi.py
+│   ├── wsgi.py
+│   └── celery.py
+├── apps/
+│   ├── __init__.py
+│   ├── auth/
+│   │   ├── __init__.py
+│   │   ├── apps.py          # (New: label = 'accounts')
+│   │   ├── models.py
+│   │   ├── serializers.py
+│   │   ├── views.py
+│   │   └── urls.py
+│   ├── flasher/
+│   ├── ai/
+│   ├── marketplace/
+│   ├── social/
+│   └── analytics/
+├── templates/
+└── static/

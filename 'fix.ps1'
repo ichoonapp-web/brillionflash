@@ -1,0 +1,41 @@
+# ============================================
+#  BRIILLIONFLASH – FIX SCRIPT (All-in-One)
+# ============================================
+Set-Location "C:\Users\home\Desktop\brillionflash"
+
+# 1. Missing urls.py files හදන්න
+$files = @(
+    "apps\ai\urls.py",
+    "apps\flasher\urls.py",
+    "apps\auth\urls.py",
+    "apps\social\urls.py",
+    "apps\analytics\urls.py",
+    "apps\marketplace\urls.py"
+)
+foreach ($file in $files) {
+    if (-not (Test-Path $file)) {
+        Write-Host "Creating $file..." -ForegroundColor Yellow
+        # ඒ ඒ file එකට අදාළ content එක මෙතන දාන්න (පහත බලන්න)
+    }
+}
+
+# 2. settings.py හි AUTH_USER_MODEL fix කරන්න
+$settingsPath = "config\settings.py"
+$settingsContent = Get-Content $settingsPath -Raw
+$settingsContent = $settingsContent -replace "AUTH_USER_MODEL\s*=\s*['\"]accounts\.User['\"]", "AUTH_USER_MODEL = 'auth.User'"
+$settingsContent | Set-Content $settingsPath -Encoding utf8
+Write-Host "AUTH_USER_MODEL fixed!" -ForegroundColor Green
+
+# 3. Git push
+git add .
+git commit -m "Fix missing urls and AUTH_USER_MODEL"
+git push origin main --force
+
+# 4. Deploy
+railway up
+
+# 5. Migrations & Superuser
+railway ssh python manage.py migrate
+railway ssh python manage.py shell -c "from django.contrib.auth.models import User; User.objects.filter(username='admin').exists() or User.objects.create_superuser('admin', 'admin@brillionflash.com', 'ChangeThisStrong123!')"
+
+Write-Host "Done!" -ForegroundColor Green

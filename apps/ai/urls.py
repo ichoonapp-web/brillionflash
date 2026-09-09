@@ -1,0 +1,6 @@
+﻿from django.urls import path
+from .views import AIRequestView, BuyAPIKeyView
+urlpatterns = [
+    path('request/', AIRequestView.as_view()),
+    path('buy-key/', BuyAPIKeyView.as_view()),
+]
