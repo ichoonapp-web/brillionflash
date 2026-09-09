@@ -51,3 +51,23 @@ class ProfileView(APIView):
 
     def get(self, request):
         return Response(UserSerializer(request.user).data)
+
+class DailyRewardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        success, message, reward = request.user.claim_daily_reward()
+        if success:
+            return Response({
+                'success': True,
+                'message': message,
+                'credits_rewarded': reward,
+                'current_streak': request.user.daily_streak,
+                'total_credits': request.user.credits
+            }, status=status.HTTP_200_OK)
+        return Response({
+            'success': False,
+            'message': message,
+            'current_streak': request.user.daily_streak,
+            'total_credits': request.user.credits
+        }, status=status.HTTP_400_BAD_REQUEST)

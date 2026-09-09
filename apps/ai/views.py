@@ -67,6 +67,47 @@ class AIRequestView(APIView):
         except Exception as e:
             return Response({"error": str(e)}, status=500)
 
+class AISkinToneView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        if user.credits <= 0:
+            return Response({"error": "No credits"}, status=400)
+
+        skin_description = request.data.get('skin_tone', 'fair warm undertone')
+        lighting_env = request.data.get('environment', 'indoor dim room')
+
+        system_prompt = 'Respond ONLY with JSON: {"kelvin":2000-10000,"rgb":[r,g,b],"brightness":0-100,"preset_name":"Name","reason":"explanation in Sinhala"}'
+        user_prompt = f"Skin Tone: {skin_description}, Environment: {lighting_env}. Give optimal kelvin color temperature, RGB and brightness."
+
+        user.credits = F('credits') - 1
+        user.save()
+
+        try:
+            content = call_deepseek(system_prompt, user_prompt)
+            match = re.search(r'\{.*\}', content, re.DOTALL)
+            if match:
+                return Response(json.loads(match.group()))
+            return Response({"kelvin": 5500, "rgb": [255, 220, 180], "brightness": 90, "preset_name": "Studio Warm Glow", "reason": "ස්වාභාවික සිනිඳු ආලෝකය"})
+        except Exception:
+            return Response({"kelvin": 5500, "rgb": [255, 220, 180], "brightness": 90, "preset_name": "Studio Warm Glow", "reason": "ස්වාභාවික සිනිඳු ආලෝකය"})
+
+class AIBeatSyncView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        bpm = request.data.get('bpm', 120)
+        genre = request.data.get('genre', 'pop')
+
+        patterns = {
+            'pop': {'pulse_interval_ms': int(60000 / max(bpm, 1)), 'colors': [[255, 0, 128], [0, 255, 255], [255, 255, 255]], 'mode': 'combined'},
+            'edm': {'pulse_interval_ms': int(30000 / max(bpm, 1)), 'colors': [[0, 255, 0], [255, 0, 255], [0, 0, 255]], 'mode': 'direct'},
+            'chill': {'pulse_interval_ms': int(120000 / max(bpm, 1)), 'colors': [[255, 180, 100], [255, 140, 80]], 'mode': 'ambient'},
+        }
+        data = patterns.get(genre, patterns['pop'])
+        return Response(data)
+
 class BuyAPIKeyView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
