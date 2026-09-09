@@ -1,7 +1,40 @@
-﻿.env
-service-account.json
+﻿# Environment & Environment Variables
+.env
+.env.*
+*.env
+
+# Secrets, Service Accounts & API Keys
+*.json
+!pubspec.json
+!package.json
+!tsconfig.json
+*.pem
+*.key
+*.p12
+
+# Database & Celery
+*.sqlite3
+*.sqlite
+*.db
+celerybeat-schedule
+celerybeat-schedule.*
+celerybeat.pid
+
+# Python & Virtual Environments
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
 venv/
-*.log
+.venv/
+env/
+ENV/
+
+# IDE & Tooling
+.idea/
+.vscode/
+*.swp
+
+# OS & Logs
 .DS_Store
+Thumbs.db
+*.log

@@ -1,4 +1,5 @@
 ﻿from django.db import models
+from django.conf import settings
 
 class LightPreset(models.Model):
     name = models.CharField(max_length=100)
@@ -13,7 +14,7 @@ class LightPreset(models.Model):
         ('combined', 'Combined'),
     ], default='combined')
     is_trending = models.BooleanField(default=False)
-    created_by = models.ForeignKey('auth.User', on_delete=models.CASCADE, null=True, blank=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return self.name

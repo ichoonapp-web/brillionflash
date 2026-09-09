@@ -1,9 +1,9 @@
 ﻿import stripe
 import os
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework import generics
+from rest_framework import generics, status
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.response import Response
 from .models import Item
 from .serializers import ItemSerializer
 
@@ -21,14 +21,19 @@ class ItemRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ItemSerializer
     permission_classes = [IsAuthenticated]
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def create_checkout_session(request):
-    if request.method == 'POST':
-        import json
-        data = json.loads(request.body)
-        item_id = data['itemId']
+    item_id = request.data.get('itemId')
+    if not item_id:
+        return Response({'error': 'itemId is required'}, status=status.HTTP_400_BAD_REQUEST)
+    try:
         item = Item.objects.get(id=item_id)
-        buyer = request.user
+    except Item.DoesNotExist:
+        return Response({'error': 'Item not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    buyer = request.user
+    try:
         session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -44,4 +49,6 @@ def create_checkout_session(request):
             cancel_url='https://yourdomain.com/cancel',
             metadata={'item_id': str(item.id), 'buyer_id': str(buyer.id)}
         )
-        return JsonResponse({'url': session.url})
+        return Response({'url': session.url})
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

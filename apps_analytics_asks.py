@@ -2,8 +2,12 @@ from celery import shared_task
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.db.models import Sum, Count
-from datetime import timedelta
+from django.contrib.auth import get_user_model
+from datetime import datetime, timedelta, timezone as dt_timezone
 import os, requests, telegram
+from apps.marketplace.models import Item
+
+User = get_user_model()
 
 @shared_task
 def generate_daily_report():
@@ -39,35 +43,42 @@ def monitor_system_health():
 
 @shared_task
 def cleanup_stale_data():
-    # Clean old sessions/logs (example)
     return "Cleaned"
 
 @shared_task
 def send_push_notifications():
-    # Send to inactive users
     return "Notifications sent"
 
 @shared_task
 def auto_resolve_issues():
-    from .sentry_client import SentryAutomation
+    from apps.analytics.sentry_client import SentryAutomation
     client = SentryAutomation()
     projects = ['brillionflash-backend', 'brillionflash-web', 'brillionflash-mobile']
+    now_utc = datetime.now(dt_timezone.utc)
     for project in projects:
         issues = client.get_unresolved_issues(project, limit=100)
-        for issue in issues:
-            if (datetime.now() - last_seen).days > 7:
-                client.resolve_issue(issue['id'])
+        if isinstance(issues, list):
+            for issue in issues:
+                last_seen_str = issue.get('lastSeen')
+                if last_seen_str:
+                    try:
+                        last_seen = datetime.fromisoformat(last_seen_str.replace('Z', '+00:00'))
+                        if (now_utc - last_seen).days > 7:
+                            client.resolve_issue(issue['id'])
+                    except ValueError:
+                        pass
     return "Issues resolved"
 
 @shared_task
 def send_error_report():
-    from .sentry_client import SentryAutomation
+    from apps.analytics.sentry_client import SentryAutomation
     client = SentryAutomation()
     projects = ['brillionflash-backend', 'brillionflash-web', 'brillionflash-mobile']
     msg = "🚨 Errors:\n"
     for project in projects:
         issues = client.get_unresolved_issues(project, limit=5)
-        msg += f"{project}: {len(issues)} issues\n"
+        count = len(issues) if isinstance(issues, list) else 0
+        msg += f"{project}: {count} issues\n"
     if os.getenv('TELEGRAM_BOT_TOKEN'):
         bot = telegram.Bot(token=os.getenv('TELEGRAM_BOT_TOKEN'))
         bot.send_message(chat_id=os.getenv('TELEGRAM_CHAT_ID'), text=msg)

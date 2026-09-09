@@ -11,8 +11,18 @@ stripe.api_key = os.getenv('STRIPE_SECRET_KEY')
 def call_deepseek(system_prompt, user_prompt, api_key=None):
     if api_key:
         client = openai.OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
+        try:
+            response = client.chat.completions.create(
+                model="deepseek-chat",
+                messages=[{"role": "system", "content": system_prompt},
+                          {"role": "user", "content": user_prompt}],
+                temperature=0.5, max_tokens=300
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            raise e
     else:
-        keys = [os.getenv(f'DEEPSEEK_KEY_{i}') for i in range(1, 11)]
+        keys = [os.getenv(f'DEEPSEEK_KEY_{i}') for i in range(1, 11) if os.getenv(f'DEEPSEEK_KEY_{i}')]
         for key in keys:
             try:
                 client = openai.OpenAI(api_key=key, base_url="https://api.deepseek.com")
@@ -25,12 +35,7 @@ def call_deepseek(system_prompt, user_prompt, api_key=None):
                 return response.choices[0].message.content
             except Exception:
                 continue
-        raise Exception("All keys failed")
-    try:
-        response = client.chat.completions.create(...)
-        return response.choices[0].message.content
-    except Exception as e:
-        raise e
+        raise Exception("All keys failed or no DeepSeek keys configured")
 
 class AIRequestView(APIView):
     permission_classes = [IsAuthenticated]

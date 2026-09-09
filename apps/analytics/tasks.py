@@ -2,9 +2,14 @@ from celery import shared_task
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.db.models import Sum, Count
+from django.contrib.auth import get_user_model
 from datetime import timedelta
 import os
+import requests
 import telegram
+from apps.marketplace.models import Item
+
+User = get_user_model()
 
 @shared_task
 def generate_daily_report():
@@ -28,18 +33,14 @@ def monitor_system_health():
             r = requests.get(ep, timeout=5)
             if r.status_code != 200:
                 alert = f"⚠️ {ep} down"
-                # send alert
         except Exception as e:
             alert = f"🚨 {ep} error: {e}"
-            # send alert
     return "Health check done"
 
 @shared_task
 def cleanup_stale_data():
-    # Clean old sessions/logs
     return "Cleaned"
 
 @shared_task
 def send_push_notifications():
-    # Send to inactive users
     return "Notifications sent"
